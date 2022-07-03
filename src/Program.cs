@@ -1,6 +1,7 @@
-﻿using System.Windows.Automation;
+﻿using System;
 using System.Diagnostics;
-using System;
+using System.Windows.Automation;
+using System.Text.Json;
 
 namespace FocusChanged
 {
@@ -16,22 +17,29 @@ namespace FocusChanged
 
         private static void OnFocusChangedHandler(object src, AutomationFocusChangedEventArgs args)
         {
-            Console.WriteLine("Focus changed!");
             AutomationElement element = src as AutomationElement;
             if (element != null)
             {
                 try
                 {
-                    string name = element.Current.Name;
-                    string id = element.Current.AutomationId;
                     int processId = element.Current.ProcessId;
                     using (Process process = Process.GetProcessById(processId))
                     {
-                        Console.WriteLine("  Name: {0}, Id: {1}, Process: {2}", name, id, process.ProcessName);
+                        var summary = new
+                        {
+                            EventId = "OnFocusChanged",
+                            Name = element.Current.Name,
+                            ProcessId = element.Current.ProcessId,
+                            AutomationId = element.Current.AutomationId,
+                        };
+                        var options = new JsonSerializerOptions { WriteIndented = false };
+                        string jsonString = JsonSerializer.Serialize(summary, options);
+                        Console.WriteLine(jsonString + ",");
                     }
                 }
-                catch
-                { 
+                catch (Exception e)
+                {
+                    Console.WriteLine("{{Error: \"{0}\"}}", e.Message);
                 }
             }
         }
@@ -46,25 +54,12 @@ namespace FocusChanged
                 int processId = element.Current.ProcessId;
                 using (Process process = Process.GetProcessById(processId))
                 {
-                    Console.WriteLine("  Open Window: Name: {0}, Id: {1}, Process: {2}", name, id, process.ProcessName);
-                }
-                AutomationEventHandler closeFunction = (object sender, AutomationEventArgs e) => { Console.WriteLine("  Close Window"); };
-                Automation.AddAutomationEventHandler(WindowPattern.WindowClosedEvent, element, TreeScope.Element, OnWindowClosed);
-            }
-        }
-
-        private static void OnWindowClosed(object src, AutomationEventArgs args)
-        {
-            Console.WriteLine("  Close Window");
-            AutomationElement element = src as AutomationElement;
-            if (element != null)
-            {
-                string name = element.Current.Name;
-                string id = element.Current.AutomationId;
-                int processId = element.Current.ProcessId;
-                using (Process process = Process.GetProcessById(processId))
-                {
-                    Console.WriteLine("  Close Window: Name: {0}, Id: {1}, Process: {2}", name, id, process.ProcessName);
+                    var processName = process.ProcessName;
+                    Console.WriteLine("  Open Window: Name: {0}, Id: {1}, Process: {2}", name, processId, processName);
+                    AutomationEventHandler closeFunction = (object sender, AutomationEventArgs e) => {
+                        Console.WriteLine("  Close Window: Name: {0}, ProcessId: {1}, Process: {2}", name, processId, processName);
+                    };
+                    Automation.AddAutomationEventHandler(WindowPattern.WindowClosedEvent, element, TreeScope.Element, closeFunction);
                 }
             }
         }
