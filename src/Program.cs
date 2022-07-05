@@ -22,7 +22,7 @@ namespace FocusChanged {
 
         static void Main(string[] args) {
             if (args.Length < 1) {
-                Console.WriteLine("Set the output file name");
+                Console.WriteLine("Usage: {0} out_file.txt", System.AppDomain.CurrentDomain.FriendlyName);
                 return;
             }
             using (var outputFile = new StreamWriter(args[0])) {
