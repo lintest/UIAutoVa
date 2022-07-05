@@ -4,7 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Automation;
 using System.Text.Json;
-using System.Windows;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 
 namespace FocusChanged {
 
@@ -37,6 +38,12 @@ namespace FocusChanged {
             }
         }
 
+        static String getControlType(AutomationElement element) {
+            var prefix = "ControlType.";
+            var name = element.Current.ControlType.ProgrammaticName;
+            return name.StartsWith(prefix) ? name.Substring(prefix.Length) : name;
+        }
+
         private static String GetEventInfo(object src, AutomationEventArgs args, String eventId) {
             AutomationElement element = src as AutomationElement;
             if (element == null) {
@@ -50,8 +57,10 @@ namespace FocusChanged {
                     var summary = new {
                         EventId = eventId,
                         Name = element.Current.Name,
+                        Type = getControlType(element),
                         ProcessId = element.Current.ProcessId,
                         AutomationId = element.Current.AutomationId,
+                        HelpText = element.Current.HelpText,
                         Rectangle = new {
                             Left = rect.Left != Double.NaN ? rect.Left : 0,
                             Top = rect.Top != Double.NaN ? rect.Top : 0,
@@ -59,19 +68,23 @@ namespace FocusChanged {
                             Height = rect.Height != Double.NaN ? rect.Height : 0,
                         },
                     };
-                    var options = new JsonSerializerOptions { WriteIndented = false };
+                    var options = new JsonSerializerOptions {
+                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic),
+                        WriteIndented = false,
+                    };
                     return JsonSerializer.Serialize(summary, options);
                 }
             }
-            catch {
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
                 return null;
             }
         }
 
         private static void WriteEvent(object src, AutomationEventArgs args, String eventId) {
-            var jsonString = GetEventInfo(src, args, "eventId");
+            var jsonString = GetEventInfo(src, args, eventId);
             if (!String.IsNullOrEmpty(jsonString)) {
-                writer.WriteLine(GetEventInfo(src, args, eventId) + ",");
+                writer.WriteLine(jsonString + ",");
             }
         }
 
