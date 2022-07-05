@@ -18,7 +18,7 @@ build:
   project: UIAutoVa.sln
 
 after_build:
-- 7z a UIAutoVa_%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\UIAutoVa\src\bin\%CONFIGURATION%\*.* -r
+- 7z a UIAutoVa_%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\src\bin\%CONFIGURATION%\*.* -r
 
 artifacts:
   - path: UIAutoVa_*.zip
