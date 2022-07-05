@@ -15,6 +15,7 @@ namespace FocusChanged {
             { SelectionItemPattern.ElementSelectedEvent, "ElementSelected" },
             { AutomationElement.MenuOpenedEvent, "MenuOpened" },
             { AutomationElement.MenuClosedEvent, "MenuClosed" },
+            { TextPattern.TextChangedEvent, "TextChanged" },
             { InvokePattern.InvokedEvent, "Invoked" },
         };
 
@@ -62,10 +63,10 @@ namespace FocusChanged {
                         AutomationId = element.Current.AutomationId,
                         HelpText = element.Current.HelpText,
                         Rectangle = new {
-                            Left = rect.Left != Double.NaN ? rect.Left : 0,
-                            Top = rect.Top != Double.NaN ? rect.Top : 0,
-                            Width = rect.Width != Double.NaN ? rect.Width : 0,
-                            Height = rect.Height != Double.NaN ? rect.Height : 0,
+                            Left = Double.IsInfinity(rect.Left) ? -1 : rect.Left,
+                            Top = Double.IsInfinity(rect.Top) ? -1 : rect.Top,
+                            Width = Double.IsInfinity(rect.Width) ? -1 : rect.Width,
+                            Height = Double.IsInfinity(rect.Height) ? -1 : rect.Height,
                         },
                     };
                     var options = new JsonSerializerOptions {
